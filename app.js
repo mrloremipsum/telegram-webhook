@@ -49,14 +49,24 @@ app.post('/telegram/webhook', async (req, res) => {
     const text = result.message || 'Пустой ответ от Apps Script';
 
     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: text,
-        parse_mode: "Markdown"
-      })
-    });
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: text,
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: "Отправил",
+              callback_data: `sent|${requestKey}`
+            }
+          ]
+        ]
+      }
+    })
+  });
 
   } catch (err) {
     console.error('Webhook error:', err);
