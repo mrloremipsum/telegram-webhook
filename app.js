@@ -5,6 +5,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL;
 
 app.get('/', (req, res) => {
   res.status(200).send('ok');
@@ -15,7 +16,7 @@ app.post('/telegram/webhook', async (req, res) => {
     const update = req.body;
     console.log('Webhook received:', JSON.stringify(update));
 
-    // Сразу отвечаем Telegram, чтобы он не ретраил
+    // Сразу отвечаем Telegram
     res.status(200).send('ok');
 
     if (!update.callback_query) {
@@ -27,7 +28,6 @@ app.post('/telegram/webhook', async (req, res) => {
     const chatId = callback.message.chat.id;
     const actionData = callback.data || '';
 
-    // Подтверждаем нажатие кнопки
     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -40,15 +40,14 @@ app.post('/telegram/webhook', async (req, res) => {
     const action = parts[0];
     const requestKey = parts.slice(1).join('|');
 
-    let text = 'Неизвестное действие';
+    const url =
+      `${APPS_SCRIPT_URL}?action=${encodeURIComponent(action)}&requestKey=${encodeURIComponent(requestKey)}`;
 
-    if (action === 'generate') {
-      text = `ТЕСТ\nrequestKey: ${requestKey}`;
-    } else if (action === 'sent') {
-      text = `ТЕСТ SENT\nrequestKey: ${requestKey}`;
-    }
+    const appsScriptResponse = await fetch(url);
+    const result = await appsScriptResponse.json();
 
-    // Отправляем сообщение тебе в Telegram
+    const text = result.message || 'Пустой ответ от Apps Script';
+
     await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
