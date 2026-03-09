@@ -53,7 +53,8 @@ app.post('/telegram/webhook', async (req, res) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: chatId,
-        text: text
+        text: text,
+        parse_mode: "Markdown"
       })
     });
 
